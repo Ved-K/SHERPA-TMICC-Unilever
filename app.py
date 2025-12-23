@@ -342,13 +342,20 @@ def sidebar_center_logo_and_title(logo_path: str, title: str, logo_width_px: int
         f"""
         <div style="text-align:center; margin-bottom: 40px;">
         {img_html}
-        <div style="font-size: 1.1rem; font-weight: 700; margin-top: 4px;">
+        <div style="
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-top: 8px;
+            letter-spacing: 0.2px;
+        ">
             {title}
         </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+
 
 # -----------------------------
 # Task & Step Logic
