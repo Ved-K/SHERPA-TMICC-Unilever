@@ -739,10 +739,7 @@ def sidebar(con) -> None:
         else:
             st.caption("No legend PDF available yet.")
 
-    st.sidebar.divider()
-
     # IMPORT
-
     nonce = st.session_state.get("_import_uploader_nonce", 0)
     uploader_key = f"import_xlsx_{nonce}"
 
@@ -811,7 +808,6 @@ def sidebar(con) -> None:
         nav_btn("3. Review & Save", "Review", disabled=not steps_ready)
         nav_btn("Edit Saved", "Edit saved", disabled=False, icon=":material/edit:")
     
-    st.sidebar.divider()
 
     with st.sidebar.expander("Danger Zone", expanded=False):
         st.caption("These actions are permanent.")
