@@ -827,7 +827,7 @@ def sidebar(con) -> None:
 
             with c1:
                 if st.button(
-                    "Confirm",
+                    "",
                     icon=":material/check_circle:",
                     type="primary",
                     use_container_width=True,
@@ -851,7 +851,7 @@ def sidebar(con) -> None:
 
             with c2:
                 if st.button(
-                    "Cancel",
+                    "",
                     icon=":material/close:",
                     use_container_width=True,
                     key="btn_cancel_clear_db",
