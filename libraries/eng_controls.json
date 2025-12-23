@@ -1,0 +1,46 @@
+[
+  {
+    "tag": "Fixed guarding",
+    "example": "Permanent guard preventing access to moving parts"
+  },
+  {
+    "tag": "Interlocked guard",
+    "example": "Stops motion when guard opened"
+  },
+  {
+    "tag": "Emergency stop accessible",
+    "example": "E-stop within reach; tested"
+  },
+  {
+    "tag": "Lockable isolator / LOTO point",
+    "example": "Main isolator lock-off"
+  },
+  {
+    "tag": "Light curtain / safety scanner",
+    "example": "Presence sensing stops motion"
+  },
+  {
+    "tag": "Two-hand control",
+    "example": "Requires both hands to actuate"
+  },
+  {
+    "tag": "Pressure dump / bleed valve",
+    "example": "Safe release of pneumatic pressure"
+  },
+  {
+    "tag": "Mechanical blocking / chocks",
+    "example": "Prevent gravity movement"
+  },
+  {
+    "tag": "Spill containment / bunding",
+    "example": "Contain CIP/product spills"
+  },
+  {
+    "tag": "Anti-slip flooring / mats",
+    "example": "Slip reduction in wet zones"
+  },
+  {
+    "tag": "Local exhaust ventilation",
+    "example": "Fume extraction for chemicals"
+  }
+]

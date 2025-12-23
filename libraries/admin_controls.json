@@ -1,0 +1,42 @@
+[
+  {
+    "tag": "SOP / Work instruction",
+    "example": "Documented steps incl hazards/controls"
+  },
+  {
+    "tag": "Training / competency",
+    "example": "Operator trained + assessed"
+  },
+  {
+    "tag": "LOTO procedure",
+    "example": "Isolation + try-out before intervention"
+  },
+  {
+    "tag": "Permit to work",
+    "example": "Confined space / hot works / heights"
+  },
+  {
+    "tag": "Pre-start checks",
+    "example": "Guards, E-stops, leaks, alarms checked"
+  },
+  {
+    "tag": "Housekeeping standard",
+    "example": "Clean spills; manage hoses/cables"
+  },
+  {
+    "tag": "Signage / barricading",
+    "example": "Warnings + exclusion zones"
+  },
+  {
+    "tag": "PPE requirement",
+    "example": "Gloves/eye/hearing protection"
+  },
+  {
+    "tag": "Supervision / buddy system",
+    "example": "Second person for higher-risk tasks"
+  },
+  {
+    "tag": "Planned maintenance schedule",
+    "example": "Preventive maintenance per OEM"
+  }
+]

@@ -1,0 +1,96 @@
+{
+  "hazards": [
+    {
+      "title": "Slip / trip / fall",
+      "desc": "Wet floors, product, CIP spills."
+    },
+    {
+      "title": "Pinch / entrapment",
+      "desc": "Nips, rollers, moving parts."
+    },
+    {
+      "title": "Cut / laceration",
+      "desc": "Blades, sharp edges, cutters."
+    },
+    {
+      "title": "Hot surface / burns",
+      "desc": "Heat tunnels, hot pipes."
+    },
+    {
+      "title": "Electrical shock",
+      "desc": "Live panels, damaged cables."
+    },
+    {
+      "title": "Manual handling / strain",
+      "desc": "Lifting, awkward postures."
+    },
+    {
+      "title": "Pressurised release",
+      "desc": "Pneumatics, pressure lines."
+    },
+    {
+      "title": "Chemical exposure (CIP)",
+      "desc": "Caustic, acid, sanitiser."
+    },
+    {
+      "title": "Noise exposure",
+      "desc": "High noise zones, prolonged exposure."
+    },
+    {
+      "title": "Unexpected start-up (LOTO)",
+      "desc": "Isolation failure or bypass."
+    }
+  ],
+  "eng_controls": [
+    {
+      "title": "Fixed guarding / interlocks",
+      "desc": "Guarding prevents access to hazard zones."
+    },
+    {
+      "title": "Emergency stop accessible",
+      "desc": "E-stops reachable, tested, labelled."
+    },
+    {
+      "title": "Pressure dump / bleed valve",
+      "desc": "Safe release of pneumatic pressure."
+    },
+    {
+      "title": "Spill containment / bunding",
+      "desc": "Contain CIP/product spills."
+    },
+    {
+      "title": "Anti-slip flooring / mats",
+      "desc": "Reduce slip risk in wet areas."
+    },
+    {
+      "title": "Isolation points labelled",
+      "desc": "Clearly identified & accessible."
+    }
+  ],
+  "admin_controls": [
+    {
+      "title": "SOP / SWMS in place",
+      "desc": "Documented method and critical steps."
+    },
+    {
+      "title": "LOTO procedure & permits",
+      "desc": "Isolation, lock, verify, permit."
+    },
+    {
+      "title": "Training / competency verified",
+      "desc": "Operator trained, assessed, signed off."
+    },
+    {
+      "title": "Signage & demarcation",
+      "desc": "Warning signs, floor marking."
+    },
+    {
+      "title": "Pre-start checks",
+      "desc": "Start-up checklist and verification."
+    },
+    {
+      "title": "Maintenance schedule",
+      "desc": "Planned servicing and inspections."
+    }
+  ]
+}

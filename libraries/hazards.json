@@ -1,0 +1,50 @@
+[
+  {
+    "tag": "Chemical exposure",
+    "example": "CIP chemicals (caustic/acid), aerosols, splashes, fumes."
+  },
+  {
+    "tag": "Compressed air",
+    "example": "Air injection, flying debris, hose whip, eye injury."
+  },
+  {
+    "tag": "Crush point",
+    "example": "Body/limbs trapped between moving and fixed objects."
+  },
+  {
+    "tag": "Electrical",
+    "example": "Shock/burn risk during access to panels/cables; damaged insulation."
+  },
+  {
+    "tag": "Heavy/Awkward Object",
+    "example": "Awkward postures, heavy object"
+  },
+  {
+    "tag": "Hot surfaces/steam",
+    "example": "Burns from hot pipes, steam, heated product, hot water."
+  },
+  {
+    "tag": "Manual handling",
+    "example": "Lifting cartons, awkward postures, repetitive movements."
+  },
+  {
+    "tag": "Noise",
+    "example": "High noise zones causing hearing damage; poor communication."
+  },
+  {
+    "tag": "Pinch/entrapment",
+    "example": "Hands/clothing caught in moving parts (nip points, rollers, rejector arms)."
+  },
+  {
+    "tag": "Sharp edges/cuts",
+    "example": "Cuts from knives, blades, metal edges, damaged guards."
+  },
+  {
+    "tag": "Slips/trips/falls",
+    "example": "Wet floors, hoses, spilled product, uneven surfaces."
+  },
+  {
+    "tag": "Stored energy (springs)",
+    "example": "Blunt force injury to face or limbs"
+  }
+]
