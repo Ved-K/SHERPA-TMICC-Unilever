@@ -741,8 +741,7 @@ def sidebar(con) -> None:
 
     st.sidebar.divider()
 
-    # IMPORT (still under Data management, but clearly separated)
-    st.sidebar.markdown("### Data Management")
+    # IMPORT
 
     nonce = st.session_state.get("_import_uploader_nonce", 0)
     uploader_key = f"import_xlsx_{nonce}"
@@ -811,6 +810,59 @@ def sidebar(con) -> None:
         nav_btn("2. Steps", "Steps", disabled=not task_ready)
         nav_btn("3. Review & Save", "Review", disabled=not steps_ready)
         nav_btn("Edit Saved", "Edit saved", disabled=False, icon=":material/edit:")
+    
+    st.sidebar.divider()
+
+    with st.sidebar.expander("Danger Zone", expanded=False):
+        st.caption("These actions are permanent.")
+
+        if st.button(
+            "Clear database",
+            icon=":material/delete_forever:",
+            type="secondary",
+            use_container_width=True,
+            key="btn_clear_db",
+        ):
+            st.session_state["_confirm_clear_db"] = True
+
+        if st.session_state.get("_confirm_clear_db"):
+            st.warning("This will permanently delete ALL Lines, Machines, Tasks, and Steps.")
+            c1, c2 = st.columns(2, gap="small")
+
+            with c1:
+                if st.button(
+                    "Confirm",
+                    icon=":material/check_circle:",
+                    type="primary",
+                    use_container_width=True,
+                    key="btn_confirm_clear_db",
+                ):
+                    store.clear_database(con)
+
+                    # reset context + editing state so UI doesn't explode
+                    for k in [
+                        "line_id", "machine_id",
+                        "edit_task_id", "edit_step_no",
+                        "append_task_id",
+                        "tasks_section",
+                        "_confirm_clear_db",
+                    ]:
+                        if k in st.session_state:
+                            st.session_state[k] = None
+
+                    st.session_state["page"] = "home"
+                    st.rerun()
+
+            with c2:
+                if st.button(
+                    "Cancel",
+                    icon=":material/close:",
+                    use_container_width=True,
+                    key="btn_cancel_clear_db",
+                ):
+                    st.session_state["_confirm_clear_db"] = False
+
+
 
 
 def home_page() -> None:

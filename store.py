@@ -900,3 +900,25 @@ def update_task(con, task_id, **changes):
     cols = ", ".join(f"{k}=?" for k in changes.keys())
     values = list(changes.values()) + [task_id]
     con.execute(f"UPDATE tasks SET {cols} WHERE id=?", values)
+
+def clear_database(con: sqlite3.Connection) -> None:
+    """
+    Clears *core* data tables (Lines, Machines, Tasks, Steps).
+    Keeps schema + any other reference tables intact.
+    """
+    # Order matters if FK constraints exist and CASCADE isn't set everywhere
+    tables = ["steps", "tasks", "machines", "lines"]
+
+    con.execute("PRAGMA foreign_keys = OFF;")
+    try:
+        for t in tables:
+            con.execute(f"DELETE FROM {t};")
+
+        # Reset AUTOINCREMENT counters (optional but nice)
+        con.execute(
+            "DELETE FROM sqlite_sequence WHERE name IN ('steps','tasks','machines','lines');"
+        )
+
+        con.commit()
+    finally:
+        con.execute("PRAGMA foreign_keys = ON;")
