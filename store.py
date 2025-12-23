@@ -485,37 +485,67 @@ def get_step(con: sqlite3.Connection, task_id: int, step_no: int) -> Optional[Di
 
 def update_step(
     con: sqlite3.Connection,
-    task_id: int,
-    step_no: int,
-    step_desc: str,
-    hazard_text: str,
-    eng_controls: str,
-    admin_controls: str,
-    probability_code: float,
-    severity_code: float,
+    *,
+    step_id: int | None = None,
+    task_id: int | None = None,
+    step_no: int | None = None,
+    step_desc: str = "",
+    hazard_text: str = "",
+    eng_controls: str = "",
+    admin_controls: str = "",
+    probability_code: float = 0.0,
+    severity_code: float = 0.0,
 ) -> None:
-    con.execute(
-        """
-        UPDATE steps
-        SET step_desc=?,
-            hazard_text=?,
-            eng_controls=?,
-            admin_controls=?,
-            probability_code=?,
-            severity_code=?
-        WHERE task_id=? AND step_no=?
-        """,
-        (
-            step_desc.strip(),
-            hazard_text.strip(),
-            eng_controls.strip(),
-            admin_controls.strip(),
-            float(probability_code),
-            float(severity_code),
-            int(task_id),
-            int(step_no),
-        ),
-    )
+    # allow updating either by step_id OR by (task_id, step_no)
+    if step_id is None:
+        if task_id is None or step_no is None:
+            raise ValueError("update_step requires either step_id OR (task_id and step_no).")
+
+        con.execute(
+            """
+            UPDATE steps
+            SET step_desc=?,
+                hazard_text=?,
+                eng_controls=?,
+                admin_controls=?,
+                probability_code=?,
+                severity_code=?
+            WHERE task_id=? AND step_no=?
+            """,
+            (
+                (step_desc or "").strip(),
+                (hazard_text or "").strip(),
+                (eng_controls or "").strip(),
+                (admin_controls or "").strip(),
+                float(probability_code),
+                float(severity_code),
+                int(task_id),
+                int(step_no),
+            ),
+        )
+    else:
+        con.execute(
+            """
+            UPDATE steps
+            SET step_desc=?,
+                hazard_text=?,
+                eng_controls=?,
+                admin_controls=?,
+                probability_code=?,
+                severity_code=?
+            WHERE id=?
+            """,
+            (
+                (step_desc or "").strip(),
+                (hazard_text or "").strip(),
+                (eng_controls or "").strip(),
+                (admin_controls or "").strip(),
+                float(probability_code),
+                float(severity_code),
+                int(step_id),
+            ),
+        )
+
     con.commit()
 
 
@@ -870,11 +900,3 @@ def update_task(con, task_id, **changes):
     cols = ", ".join(f"{k}=?" for k in changes.keys())
     values = list(changes.values()) + [task_id]
     con.execute(f"UPDATE tasks SET {cols} WHERE id=?", values)
-
-
-def update_step(con, step_id, **changes):
-    if not changes:
-        return
-    cols = ", ".join(f"{k}=?" for k in changes.keys())
-    values = list(changes.values()) + [step_id]
-    con.execute(f"UPDATE steps SET {cols} WHERE id=?", values)
