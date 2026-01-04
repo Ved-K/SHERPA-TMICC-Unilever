@@ -7,6 +7,7 @@ import hashlib
 from typing import Any, Dict, List
 import pandas as pd
 import streamlit as st
+import os
 
 import store
 from exporter import export_to_excel
@@ -49,17 +50,41 @@ DEFAULT_LIB = {
         {"title": "Unexpected start-up (LOTO)", "desc": "Isolation failure or bypass."},
     ],
     "eng_controls": [
-        {"title": "Fixed guarding / interlocks", "desc": "Guarding prevents access to hazard zones."},
-        {"title": "Emergency stop accessible", "desc": "E-stops reachable, tested, labelled."},
-        {"title": "Pressure dump / bleed valve", "desc": "Safe release of pneumatic pressure."},
+        {
+            "title": "Fixed guarding / interlocks",
+            "desc": "Guarding prevents access to hazard zones.",
+        },
+        {
+            "title": "Emergency stop accessible",
+            "desc": "E-stops reachable, tested, labelled.",
+        },
+        {
+            "title": "Pressure dump / bleed valve",
+            "desc": "Safe release of pneumatic pressure.",
+        },
         {"title": "Spill containment / bunding", "desc": "Contain CIP/product spills."},
-        {"title": "Anti-slip flooring / mats", "desc": "Reduce slip risk in wet areas."},
-        {"title": "Isolation points labelled", "desc": "Clearly identified & accessible."},
+        {
+            "title": "Anti-slip flooring / mats",
+            "desc": "Reduce slip risk in wet areas.",
+        },
+        {
+            "title": "Isolation points labelled",
+            "desc": "Clearly identified & accessible.",
+        },
     ],
     "admin_controls": [
-        {"title": "SOP / SWMS in place", "desc": "Documented method and critical steps."},
-        {"title": "LOTO procedure & permits", "desc": "Isolation, lock, verify, permit."},
-        {"title": "Training / competency verified", "desc": "Operator trained, assessed, signed off."},
+        {
+            "title": "SOP / SWMS in place",
+            "desc": "Documented method and critical steps.",
+        },
+        {
+            "title": "LOTO procedure & permits",
+            "desc": "Isolation, lock, verify, permit.",
+        },
+        {
+            "title": "Training / competency verified",
+            "desc": "Operator trained, assessed, signed off.",
+        },
         {"title": "Signage & demarcation", "desc": "Warning signs, floor marking."},
         {"title": "Pre-start checks", "desc": "Start-up checklist and verification."},
         {"title": "Maintenance schedule", "desc": "Planned servicing and inspections."},
@@ -93,7 +118,9 @@ def _migrate_lib(data: Dict[str, Any]) -> Dict[str, List[Dict[str, str]]]:
 
 def load_lib() -> Dict[str, List[Dict[str, str]]]:
     if not LIB_PATH.exists():
-        LIB_PATH.write_text(json.dumps(DEFAULT_LIB, indent=2, ensure_ascii=False), encoding="utf-8")
+        LIB_PATH.write_text(
+            json.dumps(DEFAULT_LIB, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
         return DEFAULT_LIB
     try:
         data = json.loads(LIB_PATH.read_text(encoding="utf-8"))
@@ -102,7 +129,9 @@ def load_lib() -> Dict[str, List[Dict[str, str]]]:
             data.setdefault(k, DEFAULT_LIB[k])
         return data
     except Exception:
-        LIB_PATH.write_text(json.dumps(DEFAULT_LIB, indent=2, ensure_ascii=False), encoding="utf-8")
+        LIB_PATH.write_text(
+            json.dumps(DEFAULT_LIB, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
         return DEFAULT_LIB
 
 
@@ -132,7 +161,7 @@ def rows_to_bullets(rows: List[Dict[str, Any]]) -> str:
         if not title:
             continue
         lines.append(f"- {title}: {desc}" if desc else f"- {title}")
-    
+
     seen = set()
     out = []
     for ln in lines:
@@ -157,7 +186,9 @@ def bullets_to_rows(text: str) -> List[Dict[str, Any]]:
             ln = ln.lstrip("-").strip()
         if ":" in ln:
             title, desc = ln.split(":", 1)
-            rows.append({"Title": title.strip(), "Description": desc.strip(), "Remove": False})
+            rows.append(
+                {"Title": title.strip(), "Description": desc.strip(), "Remove": False}
+            )
         else:
             rows.append({"Title": ln.strip(), "Description": "", "Remove": False})
     return rows
@@ -171,16 +202,13 @@ def init_state() -> None:
         "page": "home",
         "line_id": None,
         "machine_id": None,
-
         "tasks_section": "Task",
         "append_task_id": None,
-
         # Draft task
         "draft_task_name": "",
         "draft_operation_category": OP_CATEGORIES[0],
         "draft_phases": ["Running"],
         "draft_steps": [],
-
         # Step inputs
         "step_desc": "",
         "hazard_pick": [],
@@ -191,13 +219,11 @@ def init_state() -> None:
         "admin_rows": [],
         "prob_pick": None,
         "sev_pick": None,
-
         "step_error": "",
         "task_error": "",
         "new_line_err": "",
         "machines_bulk_result": "",
         "step_tab": "Hazards",
-
         # Edit saved
         "edit_task_id": None,
         "edit_step_no": None,
@@ -209,7 +235,6 @@ def init_state() -> None:
         "edit_prob": None,
         "edit_sev": None,
         "edit_msg": "",
-
         # Edit task header
         "edit_task_name": "",
         "edit_task_cat": OP_CATEGORIES[0],
@@ -242,7 +267,7 @@ def reset_step_inputs_cb() -> None:
     st.session_state["admin_rows"] = []
     st.session_state["step_error"] = ""
     st.session_state["step_tab"] = "Hazards"
-    
+
     for k in ("hazard_editor", "eng_editor", "admin_editor"):
         if k in st.session_state:
             del st.session_state[k]
@@ -273,6 +298,7 @@ def on_line_change_cb():
     if not st.session_state.get("draft_task_name"):
         reset_task_draft_cb()
 
+
 def on_machine_change_cb():
     if not st.session_state.get("draft_task_name"):
         reset_task_draft_cb()
@@ -302,7 +328,13 @@ def sync_selected_to_rows_cb(rows_key: str, pick_key: str, lib_key: str) -> None
 
     for t in selected:
         if t not in kept_titles:
-            kept.append({"Title": t, "Description": lib_default_desc(lib, lib_key, t), "Remove": False})
+            kept.append(
+                {
+                    "Title": t,
+                    "Description": lib_default_desc(lib, lib_key, t),
+                    "Remove": False,
+                }
+            )
 
     st.session_state[rows_key] = kept
 
@@ -325,13 +357,19 @@ def ensure_risk_defaults() -> None:
         st.session_state["sev_pick"] = sev_opts[0].code
 
 
-def sidebar_center_logo_and_title(logo_path: str, title: str, logo_width_px: int = 100) -> None:
+def sidebar_center_logo_and_title(
+    logo_path: str, title: str, logo_width_px: int = 100
+) -> None:
     p = Path(logo_path)
     img_html = ""
     if p.exists():
         b64 = base64.b64encode(p.read_bytes()).decode("utf-8")
         suffix = p.suffix.lower().lstrip(".")  # png/jpg/jpeg/webp
-        mime = "png" if suffix == "png" else ("jpeg" if suffix in ["jpg", "jpeg"] else suffix)
+        mime = (
+            "png"
+            if suffix == "png"
+            else ("jpeg" if suffix in ["jpg", "jpeg"] else suffix)
+        )
         img_html = f"""
         <div style="display:flex; justify-content:center; margin-bottom: 8px;">
           <img src="data:image/{mime};base64,{b64}" style="width:{logo_width_px}px; height:auto;" />
@@ -404,17 +442,21 @@ def add_step_cb():
         return
 
     # Add to draft
-    rating = lookup_rating(probability_code, severity_code, st.session_state["_rating_map"])
-    draft_steps.append({
-        "step_no": len(draft_steps) + 1,
-        "step_desc": step_desc,
-        "hazard_text": hazard_text,
-        "eng_controls": eng_controls,
-        "admin_controls": admin_controls,
-        "probability_code": probability_code,
-        "severity_code": severity_code,
-        "rating": rating,
-    })
+    rating = lookup_rating(
+        probability_code, severity_code, st.session_state["_rating_map"]
+    )
+    draft_steps.append(
+        {
+            "step_no": len(draft_steps) + 1,
+            "step_desc": step_desc,
+            "hazard_text": hazard_text,
+            "eng_controls": eng_controls,
+            "admin_controls": admin_controls,
+            "probability_code": probability_code,
+            "severity_code": severity_code,
+            "rating": rating,
+        }
+    )
     st.session_state["draft_steps"] = draft_steps
     reset_step_inputs_cb()
     st.session_state["tasks_section"] = "Steps"
@@ -457,7 +499,9 @@ def save_task_cb():
         return
 
     try:
-        task_id = store.create_task(con, machine_id, task_name, op_category, selected_phases)
+        task_id = store.create_task(
+            con, machine_id, task_name, op_category, selected_phases
+        )
 
         for idx, step in enumerate(draft_steps, start=1):
             store.add_step(
@@ -474,7 +518,9 @@ def save_task_cb():
 
         # ✅ Save “last saved” info BEFORE resetting draft state
         st.session_state["last_saved_task_id"] = task_id
-        st.session_state["last_saved_task_msg"] = f"✅ Task '{task_name}' saved successfully!"
+        st.session_state["last_saved_task_msg"] = (
+            f"✅ Task '{task_name}' saved successfully!"
+        )
         st.success(f"Task '{task_name}' saved with {len(draft_steps)} step(s).")
 
         reset_task_draft_cb()
@@ -495,15 +541,14 @@ def start_append_mode_cb(task_id: int) -> None:
 
 def enter_append_mode_cb(task_id: int):
     st.session_state["append_task_id"] = int(task_id)
-    st.session_state["tasks_section"] = "Steps"     # ✅ go to step editor
-    st.session_state["step_tab"] = "Hazards"        # ✅ default tab
-    reset_step_inputs_cb()                          # ✅ clear inputs for new step
+    st.session_state["tasks_section"] = "Steps"  # ✅ go to step editor
+    st.session_state["step_tab"] = "Hazards"  # ✅ default tab
+    reset_step_inputs_cb()  # ✅ clear inputs for new step
 
     # optional: you don't really need draft_steps in append mode, but harmless
     con = st.session_state["_con"]
     steps = store.list_steps_for_task(con, int(task_id))
     st.session_state["draft_steps"] = [dict(s) for s in steps]
-
 
 
 def exit_append_mode_cb() -> None:
@@ -672,10 +717,36 @@ def top_nav(con) -> None:
     has_machine = bool(st.session_state.get("machine_id"))
 
     c1, c2, c3, c4 = st.columns(4, gap="small")
-    c1.button("Home", icon=":material/home:", use_container_width=True, on_click=set_page, args=("home",))
-    c2.button("Create Line", icon=":material/add:", use_container_width=True, on_click=set_page, args=("create_line",))
-    c3.button("Add Machines", icon=":material/settings:", use_container_width=True, on_click=set_page, args=("add_machines",), disabled=not has_line)
-    c4.button("Add Tasks", icon=":material/assignment:", use_container_width=True, on_click=set_page, args=("add_tasks",), disabled=not (has_line and has_machine))
+    c1.button(
+        "Home",
+        icon=":material/home:",
+        use_container_width=True,
+        on_click=set_page,
+        args=("home",),
+    )
+    c2.button(
+        "Create Line",
+        icon=":material/add:",
+        use_container_width=True,
+        on_click=set_page,
+        args=("create_line",),
+    )
+    c3.button(
+        "Add Machines",
+        icon=":material/settings:",
+        use_container_width=True,
+        on_click=set_page,
+        args=("add_machines",),
+        disabled=not has_line,
+    )
+    c4.button(
+        "Add Tasks",
+        icon=":material/assignment:",
+        use_container_width=True,
+        on_click=set_page,
+        args=("add_tasks",),
+        disabled=not (has_line and has_machine),
+    )
 
 
 def sidebar(con) -> None:
@@ -683,11 +754,25 @@ def sidebar(con) -> None:
 
     # --- Context ---
     with st.sidebar.expander("Context", expanded=False):
-        line = store.get_line(con, st.session_state.get("line_id")) if st.session_state.get("line_id") else None
-        machine = store.get_machine(con, st.session_state.get("machine_id")) if st.session_state.get("machine_id") else None
+        line = (
+            store.get_line(con, st.session_state.get("line_id"))
+            if st.session_state.get("line_id")
+            else None
+        )
+        machine = (
+            store.get_machine(con, st.session_state.get("machine_id"))
+            if st.session_state.get("machine_id")
+            else None
+        )
 
-        st.write(f"**Line:** {line['code']} — {line['name']}" if line else "**Line:** _None_")
-        st.write(f"**Machine:** {machine['code']} — {machine['name']}" if machine else "**Machine:** _None_")
+        st.write(
+            f"**Line:** {line['code']} — {line['name']}" if line else "**Line:** _None_"
+        )
+        st.write(
+            f"**Machine:** {machine['code']} — {machine['name']}"
+            if machine
+            else "**Machine:** _None_"
+        )
 
     st.sidebar.divider()
 
@@ -714,7 +799,9 @@ def sidebar(con) -> None:
         legend_path = Path("SHERPA_Legend.pdf")
 
         st.session_state["_export_ready"] = str(out_path) if out_path.exists() else None
-        st.session_state["_legend_ready"] = str(legend_path) if legend_path.exists() else None
+        st.session_state["_legend_ready"] = (
+            str(legend_path) if legend_path.exists() else None
+        )
         st.sidebar.success("Export complete.")
 
     # DOWNLOADS (separate from import)
@@ -786,19 +873,27 @@ def sidebar(con) -> None:
         st.session_state["_post_import_rerun"] = False
 
         # reset uploader + go home
-        st.session_state["_import_uploader_nonce"] = st.session_state.get("_import_uploader_nonce", 0) + 1
+        st.session_state["_import_uploader_nonce"] = (
+            st.session_state.get("_import_uploader_nonce", 0) + 1
+        )
         st.session_state["page"] = "home"
         st.rerun()
 
     st.sidebar.divider()
     if st.session_state["page"] == "add_tasks":
         current = st.session_state.get("tasks_section", "Task")
-        task_ready = bool((st.session_state.get("draft_task_name") or "").strip()) or bool(st.session_state.get("append_task_id"))
-        steps_ready = len(st.session_state.get("draft_steps") or []) > 0 or bool(st.session_state.get("append_task_id"))
+        task_ready = bool(
+            (st.session_state.get("draft_task_name") or "").strip()
+        ) or bool(st.session_state.get("append_task_id"))
+        steps_ready = len(st.session_state.get("draft_steps") or []) > 0 or bool(
+            st.session_state.get("append_task_id")
+        )
 
         st.sidebar.markdown("#### Workflow")
 
-        def nav_btn(label: str, section: str, disabled: bool = False, icon: str = None) -> None:
+        def nav_btn(
+            label: str, section: str, disabled: bool = False, icon: str = None
+        ) -> None:
             st.sidebar.button(
                 label,
                 key=f"nav_{section}",
@@ -807,14 +902,47 @@ def sidebar(con) -> None:
                 args=(section,),
                 disabled=disabled,
                 type="primary" if current == section else "secondary",
-                icon=icon
+                icon=icon,
             )
 
         nav_btn("1. Task Details", "Task", disabled=False)
         nav_btn("2. Steps", "Steps", disabled=not task_ready)
         nav_btn("3. Review & Save", "Review", disabled=not steps_ready)
         nav_btn("Edit Saved", "Edit saved", disabled=False, icon=":material/edit:")
-    
+
+    if st.session_state.get("role") == "admin":
+        with st.sidebar.expander("User Management", expanded=False):
+            new_email = st.text_input("User email")
+            new_role = st.selectbox("Role", ["user", "admin"])
+            active = st.checkbox("Active", value=True)
+
+            if st.button(
+                "Add / Update user",
+                icon=":material/person_add:",
+                use_container_width=True,
+            ):
+                cur = con.cursor()
+                cur.execute(
+                    """
+                    IF EXISTS (SELECT 1 FROM app_users WHERE email = ?)
+                        UPDATE app_users
+                        SET role = ?, is_active = ?, updated_at = SYSUTCDATETIME()
+                        WHERE email = ?
+                    ELSE
+                        INSERT INTO app_users (email, role, is_active, created_by)
+                        VALUES (?, ?, ?, ?)
+                """,
+                    new_email.lower().strip(),
+                    new_role,
+                    int(active),
+                    new_email.lower().strip(),
+                    new_email.lower().strip(),
+                    new_role,
+                    int(active),
+                    st.user.email,
+                )
+                con.commit()
+                st.success("User saved.")
 
     with st.sidebar.expander("Danger Zone", expanded=False):
         st.caption("These actions are permanent.")
@@ -829,7 +957,9 @@ def sidebar(con) -> None:
             st.session_state["_confirm_clear_db"] = True
 
         if st.session_state.get("_confirm_clear_db"):
-            st.warning("This will permanently delete ALL Lines, Machines, Tasks, and Steps.")
+            st.warning(
+                "This will permanently delete ALL Lines, Machines, Tasks, and Steps."
+            )
             c1, c2 = st.columns(2, gap="small")
 
             with c1:
@@ -844,8 +974,10 @@ def sidebar(con) -> None:
 
                     # reset context + editing state so UI doesn't explode
                     for k in [
-                        "line_id", "machine_id",
-                        "edit_task_id", "edit_step_no",
+                        "line_id",
+                        "machine_id",
+                        "edit_task_id",
+                        "edit_step_no",
                         "append_task_id",
                         "tasks_section",
                         "_confirm_clear_db",
@@ -866,22 +998,41 @@ def sidebar(con) -> None:
                     st.session_state["_confirm_clear_db"] = False
 
 
-
-
 def home_page() -> None:
     st.header("SHERPA Dashboard", anchor=False)
     st.caption("Select an action to begin.")
-    
+
     c1, c2, c3 = st.columns(3, gap="large")
-    c1.button("Create New Line", icon=":material/add_circle:", type="primary", use_container_width=True, on_click=set_page, args=("create_line",))
-    c2.button("Manage Machines", icon=":material/settings_applications:", use_container_width=True, on_click=set_page, args=("add_machines",))
-    c3.button("Manage Tasks", icon=":material/list_alt:", use_container_width=True, on_click=set_page, args=("add_tasks",))
+    c1.button(
+        "Create New Line",
+        icon=":material/add_circle:",
+        type="primary",
+        use_container_width=True,
+        on_click=set_page,
+        args=("create_line",),
+    )
+    c2.button(
+        "Manage Machines",
+        icon=":material/settings_applications:",
+        use_container_width=True,
+        on_click=set_page,
+        args=("add_machines",),
+    )
+    c3.button(
+        "Manage Tasks",
+        icon=":material/list_alt:",
+        use_container_width=True,
+        on_click=set_page,
+        args=("add_tasks",),
+    )
 
 
 def create_line_page(con) -> None:
     st.header("Create Line", anchor=False)
     with st.container(border=True):
-        st.text_input("Line Name", key="new_line_name", placeholder="e.g. Line 1 — Stick line")
+        st.text_input(
+            "Line Name", key="new_line_name", placeholder="e.g. Line 1 — Stick line"
+        )
 
         def create_line_cb():
             nm = (st.session_state.get("new_line_name") or "").strip()
@@ -909,7 +1060,12 @@ def add_machines_page(con) -> None:
     lines = store.list_lines(con)
     if not lines:
         st.warning("Please create a line first.")
-        st.button("Go to Create Line", type="primary", on_click=set_page, args=("create_line",))
+        st.button(
+            "Go to Create Line",
+            type="primary",
+            on_click=set_page,
+            args=("create_line",),
+        )
         return
 
     line_lookup = {l["id"]: f"{l['code']} — {l['name']}" for l in lines}
@@ -927,7 +1083,14 @@ def add_machines_page(con) -> None:
     with left:
         st.subheader("Existing Machines", anchor=False)
         st.dataframe(
-            [{"Code": m["code"], "Machine": m["name"], "Type": m.get("machine_type", "")} for m in machines],
+            [
+                {
+                    "Code": m["code"],
+                    "Machine": m["name"],
+                    "Type": m.get("machine_type", ""),
+                }
+                for m in machines
+            ],
             use_container_width=True,
             hide_index=True,
         )
@@ -935,16 +1098,27 @@ def add_machines_page(con) -> None:
     with right:
         st.subheader("Bulk Add Machines", anchor=False)
         with st.container(border=True):
-            st.caption("Paste machine names (one per line). Duplicates will be skipped.")
+            st.caption(
+                "Paste machine names (one per line). Duplicates will be skipped."
+            )
             st.text_area("Machine List", key="machines_bulk", height=200)
 
             def bulk_add_cb():
                 names = (st.session_state.get("machines_bulk") or "").splitlines()
-                added, skipped = store.bulk_add_machines(con, st.session_state["line_id"], names)
-                st.session_state["machines_bulk_result"] = f"Added {added} machines. Skipped {skipped} duplicates."
+                added, skipped = store.bulk_add_machines(
+                    con, st.session_state["line_id"], names
+                )
+                st.session_state["machines_bulk_result"] = (
+                    f"Added {added} machines. Skipped {skipped} duplicates."
+                )
                 st.session_state["machines_bulk"] = ""
 
-            st.button("Add Machines", type="primary", on_click=bulk_add_cb, use_container_width=True)
+            st.button(
+                "Add Machines",
+                type="primary",
+                on_click=bulk_add_cb,
+                use_container_width=True,
+            )
             if st.session_state.get("machines_bulk_result"):
                 st.success(st.session_state["machines_bulk_result"])
 
@@ -958,11 +1132,12 @@ def add_tasks_page(con) -> None:
         st.session_state["_trigger_rerun"] = False
         st.rerun()
 
-
     lines = store.list_lines(con)
     if not lines:
         st.warning("Create a line first.")
-        st.button("Create Line", type="primary", on_click=set_page, args=("create_line",))
+        st.button(
+            "Create Line", type="primary", on_click=set_page, args=("create_line",)
+        )
         return
 
     line_lookup = {l["id"]: f"{l['code']} — {l['name']}" for l in lines}
@@ -977,7 +1152,9 @@ def add_tasks_page(con) -> None:
     machines = store.list_machines(con, st.session_state["line_id"])
     if not machines:
         st.warning("No machines on this line yet.")
-        st.button("Add Machines", type="primary", on_click=set_page, args=("add_machines",))
+        st.button(
+            "Add Machines", type="primary", on_click=set_page, args=("add_machines",)
+        )
         return
 
     mach_lookup = {m["id"]: f"{m['code']} — {m['name']}" for m in machines}
@@ -1010,28 +1187,47 @@ def add_tasks_page(con) -> None:
         st.subheader("Create a New Task")
         if st.session_state.get("append_task_id"):
             t = store.get_task(con, int(st.session_state["append_task_id"]))
-            st.warning(f"Append mode active: Adding steps to **{t['code']} — {t['name']}**.")
-            st.button("Cancel & Start New Task", on_click=reset_task_draft_cb, use_container_width=True)
+            st.warning(
+                f"Append mode active: Adding steps to **{t['code']} — {t['name']}**."
+            )
+            st.button(
+                "Cancel & Start New Task",
+                on_click=reset_task_draft_cb,
+                use_container_width=True,
+            )
 
         with st.container(border=True):
-            name_input = st.text_input("Task Name", key="draft_task_name", placeholder="Enter task name")
+            name_input = st.text_input(
+                "Task Name", key="draft_task_name", placeholder="Enter task name"
+            )
             if name_input.strip():
                 st.session_state["last_task_name_input"] = name_input.strip()
 
-            st.selectbox("Operation Category", OP_CATEGORIES, key="draft_operation_category")
+            st.selectbox(
+                "Operation Category", OP_CATEGORIES, key="draft_operation_category"
+            )
             st.multiselect("Phase(s)", PHASES, key="draft_phases")
             st.session_state["last_task_draft_saved"] = True
 
         task_ready = bool((st.session_state.get("draft_task_name") or "").strip())
-        st.button("Next: Define Steps", type="primary", disabled=not task_ready, on_click=set_section, args=("Steps",))
+        st.button(
+            "Next: Define Steps",
+            type="primary",
+            disabled=not task_ready,
+            on_click=set_section,
+            args=("Steps",),
+        )
 
     # STEPS
     elif section == "Steps":
         ensure_risk_defaults()
 
-        if st.session_state.get("step_tab") not in ["Hazards", "Engineering controls", "Admin controls"]:
+        if st.session_state.get("step_tab") not in [
+            "Hazards",
+            "Engineering controls",
+            "Admin controls",
+        ]:
             st.session_state["step_tab"] = "Hazards"
-
 
         append_task_id = st.session_state.get("append_task_id")
         if append_task_id:
@@ -1058,7 +1254,11 @@ def add_tasks_page(con) -> None:
                     on_change=sync_selected_to_rows_cb,
                     args=("hazard_rows", "hazard_pick", "hazards"),
                 )
-                st.button("Add Custom Hazard", on_click=add_custom_row_cb, args=("hazard_rows",))
+                st.button(
+                    "Add Custom Hazard",
+                    on_click=add_custom_row_cb,
+                    args=("hazard_rows",),
+                )
                 edited = st.data_editor(
                     st.session_state.get("hazard_rows", []),
                     key="hazard_editor",
@@ -1075,7 +1275,9 @@ def add_tasks_page(con) -> None:
                     on_change=sync_selected_to_rows_cb,
                     args=("eng_rows", "eng_pick", "eng_controls"),
                 )
-                st.button("Add Custom Control", on_click=add_custom_row_cb, args=("eng_rows",))
+                st.button(
+                    "Add Custom Control", on_click=add_custom_row_cb, args=("eng_rows",)
+                )
                 edited = st.data_editor(
                     st.session_state.get("eng_rows", []),
                     key="eng_editor",
@@ -1092,7 +1294,11 @@ def add_tasks_page(con) -> None:
                     on_change=sync_selected_to_rows_cb,
                     args=("admin_rows", "admin_pick", "admin_controls"),
                 )
-                st.button("Add Custom Control", on_click=add_custom_row_cb, args=("admin_rows",))
+                st.button(
+                    "Add Custom Control",
+                    on_click=add_custom_row_cb,
+                    args=("admin_rows",),
+                )
                 edited = st.data_editor(
                     st.session_state.get("admin_rows", []),
                     key="admin_editor",
@@ -1109,21 +1315,34 @@ def add_tasks_page(con) -> None:
                 st.selectbox(
                     "Probability",
                     options=[p.code for p in prob_opts],
-                    format_func=lambda c: next((p.label for p in prob_opts if p.code == c), str(c)),
+                    format_func=lambda c: next(
+                        (p.label for p in prob_opts if p.code == c), str(c)
+                    ),
                     key="prob_pick",
                 )
             with c2:
                 st.selectbox(
                     "Severity",
                     options=[s.code for s in sev_opts],
-                    format_func=lambda c: next((s.label for s in sev_opts if s.code == c), str(c)),
+                    format_func=lambda c: next(
+                        (s.label for s in sev_opts if s.code == c), str(c)
+                    ),
                     key="sev_pick",
                 )
             with c3:
-                rating = lookup_rating(float(st.session_state["prob_pick"]), float(st.session_state["sev_pick"]), st.session_state["_rating_map"])
+                rating = lookup_rating(
+                    float(st.session_state["prob_pick"]),
+                    float(st.session_state["sev_pick"]),
+                    st.session_state["_rating_map"],
+                )
                 st.metric("Risk Rating", rating)
 
-            st.button("Add Step", on_click=add_step_cb, use_container_width=True, icon=":material/add:")
+            st.button(
+                "Add Step",
+                on_click=add_step_cb,
+                use_container_width=True,
+                icon=":material/add:",
+            )
 
         if st.session_state.get("step_error"):
             st.error(st.session_state["step_error"])
@@ -1142,7 +1361,11 @@ def add_tasks_page(con) -> None:
                         "Admin Controls": s["admin_controls"].replace("\n", " • "),
                         "Probability": s["probability_code"],
                         "Severity": s["severity_code"],
-                        "Risk": lookup_rating(float(s["probability_code"]), float(s["severity_code"]), st.session_state["_rating_map"]),
+                        "Risk": lookup_rating(
+                            float(s["probability_code"]),
+                            float(s["severity_code"]),
+                            st.session_state["_rating_map"],
+                        ),
                     }
                     for s in steps
                 ],
@@ -1167,7 +1390,13 @@ def add_tasks_page(con) -> None:
                 use_container_width=True,
                 hide_index=True,
             )
-            st.button("Next: Review", type="primary", disabled=len(steps) == 0, on_click=set_section, args=("Review",))
+            st.button(
+                "Next: Review",
+                type="primary",
+                disabled=len(steps) == 0,
+                on_click=set_section,
+                args=("Review",),
+            )
 
     # REVIEW
     elif section == "Review":
@@ -1190,7 +1419,13 @@ def add_tasks_page(con) -> None:
         else:
             st.info("No draft steps available.")
 
-        st.button("Save Task", on_click=save_task_cb, use_container_width=True, type="primary", icon=":material/save:")
+        st.button(
+            "Save Task",
+            on_click=save_task_cb,
+            use_container_width=True,
+            type="primary",
+            icon=":material/save:",
+        )
 
         if st.session_state.get("task_error"):
             st.error(st.session_state["task_error"])
@@ -1199,8 +1434,16 @@ def add_tasks_page(con) -> None:
             t = store.get_task(con, int(st.session_state["append_task_id"]))
             st.success(f"Saved {t['code']} — {t['name']}")
             c1, c2 = st.columns(2, gap="large")
-            c1.button("Add Another Step", type="primary", use_container_width=True, on_click=start_append_mode_cb, args=(int(t["id"]),))
-            c2.button("Start New Task", use_container_width=True, on_click=reset_task_draft_cb)
+            c1.button(
+                "Add Another Step",
+                type="primary",
+                use_container_width=True,
+                on_click=start_append_mode_cb,
+                args=(int(t["id"]),),
+            )
+            c2.button(
+                "Start New Task", use_container_width=True, on_click=reset_task_draft_cb
+            )
 
     # EDIT SAVED
     else:
@@ -1268,32 +1511,61 @@ def add_tasks_page(con) -> None:
                     left, a, b, c, d, e = st.columns([10, 1, 1, 1, 1, 1], gap="small")
                     with left:
                         st.write(f"**Step {s['step_no']}** — {s['step_desc']}")
-                        st.caption(f"Risk: {lookup_rating(float(s['probability_code']), float(s['severity_code']), st.session_state['_rating_map'])}")
+                        st.caption(
+                            f"Risk: {lookup_rating(float(s['probability_code']), float(s['severity_code']), st.session_state['_rating_map'])}"
+                        )
 
-                    a.button(" ", key=f"up_{s['id']}",  icon=":material/arrow_upward:",
-                            on_click=move_step_cb, args=(int(s["task_id"]), int(s["step_no"]), -1),
-                            help="Move step up")
+                    a.button(
+                        " ",
+                        key=f"up_{s['id']}",
+                        icon=":material/arrow_upward:",
+                        on_click=move_step_cb,
+                        args=(int(s["task_id"]), int(s["step_no"]), -1),
+                        help="Move step up",
+                    )
 
-                    b.button(" ", key=f"dn_{s['id']}",  icon=":material/arrow_downward:",
-                            on_click=move_step_cb, args=(int(s["task_id"]), int(s["step_no"]), +1),
-                            help="Move step down")
+                    b.button(
+                        " ",
+                        key=f"dn_{s['id']}",
+                        icon=":material/arrow_downward:",
+                        on_click=move_step_cb,
+                        args=(int(s["task_id"]), int(s["step_no"]), +1),
+                        help="Move step down",
+                    )
 
-                    c.button(" ", key=f"dup_{s['id']}", icon=":material/content_copy:",
-                            on_click=duplicate_step_cb, args=(int(s["task_id"]), int(s["step_no"])),
-                            help="Duplicate step")
+                    c.button(
+                        " ",
+                        key=f"dup_{s['id']}",
+                        icon=":material/content_copy:",
+                        on_click=duplicate_step_cb,
+                        args=(int(s["task_id"]), int(s["step_no"])),
+                        help="Duplicate step",
+                    )
 
-                    d.button(" ", key=f"del_{s['id']}", icon=":material/delete:",
-                            on_click=delete_step_cb, args=(int(s["task_id"]), int(s["step_no"])),
-                            help="Delete step")
+                    d.button(
+                        " ",
+                        key=f"del_{s['id']}",
+                        icon=":material/delete:",
+                        on_click=delete_step_cb,
+                        args=(int(s["task_id"]), int(s["step_no"])),
+                        help="Delete step",
+                    )
 
-                    e.button(" ", key=f"edit_{s['id']}", icon=":material/edit:",
-                            on_click=open_edit_step_cb, args=(int(s["task_id"]), int(s["step_no"])),
-                            help="Edit step")
-
+                    e.button(
+                        " ",
+                        key=f"edit_{s['id']}",
+                        icon=":material/edit:",
+                        on_click=open_edit_step_cb,
+                        args=(int(s["task_id"]), int(s["step_no"])),
+                        help="Edit step",
+                    )
 
         st.divider()
 
-        if st.session_state.get("edit_step_no") is not None and st.session_state["tasks_section"] == "Edit saved":
+        if (
+            st.session_state.get("edit_step_no") is not None
+            and st.session_state["tasks_section"] == "Edit saved"
+        ):
             # render editor box
 
             # Step Editor
@@ -1307,7 +1579,12 @@ def add_tasks_page(con) -> None:
                 if st.session_state.get("edit_step_no") not in step_nos:
                     st.session_state["edit_step_no"] = step_nos[0]
 
-                st.selectbox("Select Step Number", options=step_nos, key="edit_step_no", format_func=lambda x: f"Step {x}")
+                st.selectbox(
+                    "Select Step Number",
+                    options=step_nos,
+                    key="edit_step_no",
+                    format_func=lambda x: f"Step {x}",
+                )
                 load_edit_if_needed(con)
 
                 prob_opts = st.session_state["_probability"]
@@ -1316,15 +1593,32 @@ def add_tasks_page(con) -> None:
                 with st.container(border=True):
                     st.text_area("Step Description", key="edit_step_desc", height=90)
 
-                    tab_h, tab_e, tab_a = st.tabs(["Hazards", "Engineering", "Administrative"])
+                    tab_h, tab_e, tab_a = st.tabs(
+                        ["Hazards", "Engineering", "Administrative"]
+                    )
                     with tab_h:
-                        edited = st.data_editor(st.session_state.get("edit_hazard_rows", []), key="edit_hazard_editor", use_container_width=True, num_rows="dynamic")
+                        edited = st.data_editor(
+                            st.session_state.get("edit_hazard_rows", []),
+                            key="edit_hazard_editor",
+                            use_container_width=True,
+                            num_rows="dynamic",
+                        )
                         st.session_state["edit_hazard_rows"] = edited
                     with tab_e:
-                        edited = st.data_editor(st.session_state.get("edit_eng_rows", []), key="edit_eng_editor", use_container_width=True, num_rows="dynamic")
+                        edited = st.data_editor(
+                            st.session_state.get("edit_eng_rows", []),
+                            key="edit_eng_editor",
+                            use_container_width=True,
+                            num_rows="dynamic",
+                        )
                         st.session_state["edit_eng_rows"] = edited
                     with tab_a:
-                        edited = st.data_editor(st.session_state.get("edit_admin_rows", []), key="edit_admin_editor", use_container_width=True, num_rows="dynamic")
+                        edited = st.data_editor(
+                            st.session_state.get("edit_admin_rows", []),
+                            key="edit_admin_editor",
+                            use_container_width=True,
+                            num_rows="dynamic",
+                        )
                         st.session_state["edit_admin_rows"] = edited
 
                     c1, c2, c3 = st.columns([1, 1, 1], gap="large")
@@ -1332,18 +1626,26 @@ def add_tasks_page(con) -> None:
                         st.selectbox(
                             "Probability",
                             options=[p.code for p in prob_opts],
-                            format_func=lambda c: next((p.label for p in prob_opts if p.code == c), str(c)),
+                            format_func=lambda c: next(
+                                (p.label for p in prob_opts if p.code == c), str(c)
+                            ),
                             key="edit_prob",
                         )
                     with c2:
                         st.selectbox(
                             "Severity",
                             options=[s.code for s in sev_opts],
-                            format_func=lambda c: next((s.label for s in sev_opts if s.code == c), str(c)),
+                            format_func=lambda c: next(
+                                (s.label for s in sev_opts if s.code == c), str(c)
+                            ),
                             key="edit_sev",
                         )
                     with c3:
-                        rating = lookup_rating(float(st.session_state["edit_prob"]), float(st.session_state["edit_sev"]), st.session_state["_rating_map"])
+                        rating = lookup_rating(
+                            float(st.session_state["edit_prob"]),
+                            float(st.session_state["edit_sev"]),
+                            st.session_state["_rating_map"],
+                        )
                         st.metric("Risk Rating", rating)
 
                     st.button(
@@ -1366,7 +1668,14 @@ def render_existing_tasks_for_machine(con, machine_id: int) -> None:
             return
 
         # Search
-        q = (st.text_input("Search Tasks (Code or Name)", key="existing_task_search") or "").strip().lower()
+        q = (
+            (
+                st.text_input("Search Tasks (Code or Name)", key="existing_task_search")
+                or ""
+            )
+            .strip()
+            .lower()
+        )
         filtered = (
             [t for t in tasks if (q in t["code"].lower() or q in t["name"].lower())]
             if q
@@ -1389,7 +1698,10 @@ def render_existing_tasks_for_machine(con, machine_id: int) -> None:
         st.dataframe(df, use_container_width=True, hide_index=True)
 
         # Inspect Task
-        labels = [f"{t['code']} — {t['name']} ({int(t.get('step_count', 0) or 0)} steps)" for t in filtered]
+        labels = [
+            f"{t['code']} — {t['name']} ({int(t.get('step_count', 0) or 0)} steps)"
+            for t in filtered
+        ]
         label_to_id = {labels[i]: filtered[i]["id"] for i in range(len(filtered))}
 
         default_idx = 0
@@ -1400,7 +1712,12 @@ def render_existing_tasks_for_machine(con, machine_id: int) -> None:
                     default_idx = i
                     break
 
-        picked = st.selectbox("Select Task to Inspect", options=labels, index=default_idx, key="existing_task_pick")
+        picked = st.selectbox(
+            "Select Task to Inspect",
+            options=labels,
+            index=default_idx,
+            key="existing_task_pick",
+        )
         task_id = int(label_to_id[picked])
 
         in_append = bool(st.session_state.get("append_task_id"))
@@ -1454,8 +1771,6 @@ def render_existing_tasks_for_machine(con, machine_id: int) -> None:
             ):
                 st.session_state["confirm_delete_task"] = int(task_id)
 
-
-
         # Task Preview
         for t in filtered:
             if t["id"] == task_id:
@@ -1474,20 +1789,77 @@ def render_existing_tasks_for_machine(con, machine_id: int) -> None:
                         "Admin Controls": s["admin_controls"].replace("\n", " • "),
                         "Probability": s["probability_code"],
                         "Severity": s["severity_code"],
-                        "Risk": lookup_rating(float(s["probability_code"]), float(s["severity_code"]), st.session_state["_rating_map"]),
+                        "Risk": lookup_rating(
+                            float(s["probability_code"]),
+                            float(s["severity_code"]),
+                            st.session_state["_rating_map"],
+                        ),
                     }
-
                     for s in steps
                 ]
-                st.dataframe(pd.DataFrame(step_rows), use_container_width=True, hide_index=True)
+                st.dataframe(
+                    pd.DataFrame(step_rows), use_container_width=True, hide_index=True
+                )
+
+
+def require_access(con):
+    # 1) must be logged in
+    if not st.user.is_logged_in:
+        st.info("Please sign in to access SHERPA.")
+        st.login("microsoft")  # uses OIDC provider config
+        st.stop()
+
+    email = (st.user.email or "").strip().lower()
+    if not email:
+        st.error("Signed in, but no email was provided by the identity provider.")
+        st.stop()
+
+    # 2) must be allowlisted in DB
+    cur = con.cursor()
+    cur.execute("SELECT role, is_active FROM app_users WHERE email = ?", email)
+    row = cur.fetchone()
+
+    if not row or not row[1]:
+        st.error("You don’t have access yet. Ask an admin to add your account.")
+        st.stop()
+
+    st.session_state["role"] = row[0]
 
 
 def main() -> None:
-    st.set_page_config(page_title=APP_NAME, page_icon=":material/security:", layout="wide")
+    st.set_page_config(
+        page_title=APP_NAME, page_icon=":material/security:", layout="wide"
+    )
     init_state()
 
-    con = store.connect(DB_PATH)
-    st.session_state["_con"] = con
+    # --- Azure SQL connection (reused across reruns) ---
+    def get_live_con():
+        def _conn_alive(c):
+            try:
+                cur = c.cursor()
+                cur.execute("SELECT 1")
+                cur.fetchone()
+                cur.close()
+                return True
+            except Exception:
+                return False
+
+        if (
+            "_con" not in st.session_state
+            or st.session_state["_con"] is None
+            or not _conn_alive(st.session_state["_con"])
+        ):
+            st.session_state["_con"] = store.get_connection()
+
+        return st.session_state["_con"]
+
+    con = get_live_con()
+    store._init_schema(con)
+
+    # -----------------------------------------------
+
+    # auth check must happen AFTER we have the reused connection
+    require_access(con)
 
     if not Path(UMS_PATH).exists():
         st.error(f"Missing configuration file: {UMS_PATH}")
@@ -1499,6 +1871,7 @@ def main() -> None:
     st.session_state["_rating_map"] = rating_map
 
     st.session_state["_lib"] = load_lib()
+
     ensure_context(con)
 
     top_nav(con)
